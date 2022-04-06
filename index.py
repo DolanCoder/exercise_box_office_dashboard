@@ -49,7 +49,7 @@ CORS(server)
 plot_layout = dict(
     autosize=True,
     automargin=True,
-    margin=dict(l=30, r=30, b=30, t=40),
+    margin=dict(l=50, r=30, b=100, t=40),
     hovermode="closest",
     plot_bgcolor="#F9F9F9",
     paper_bgcolor="#F9F9F9",
@@ -220,7 +220,7 @@ def make_distributor_pie_graph(mpaa_rating, genres):
 
 
     figure = dict(data=data,layout=layout_aggregate )
- 
+    
     return figure
 
 @app.callback(
@@ -228,9 +228,27 @@ def make_distributor_pie_graph(mpaa_rating, genres):
     [Input('mpaa_rating', 'value'),
     Input('genres', 'value')])
 def make_distributor_histogram(mpaa_rating, genres):
+    layout_aggregate = copy.deepcopy(plot_layout)
+    data_numericf = helper.filter_movies_by_ratings(data_numeric, mpaa_rating)
 
+    distributors= data_numericf.groupby(['distributor']).sum()
+    distributors = distributors[distributors['budget']>0]
+    distributors['return'] = distributors['world_revenue']/distributors['budget']
+    distributors = distributors.sort_values('return', ascending=False)
 
-    return
+    data = [dict(type = 'bar',
+                x=distributors.head(10).index.tolist(), 
+                y=distributors.head(10)['return'])
+                ]
+
+    layout_aggregate['yaxis'] = dict(
+        title='World Revenue/Budget Ratio',
+        titlefont_size=16,
+        tickfont_size=14,)
+    figure = dict(data=data,layout=layout_aggregate )
+
+    
+    return figure
 
 if __name__ == '__main__':
     
